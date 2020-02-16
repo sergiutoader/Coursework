@@ -1,0 +1,50 @@
+31
+g2 WY 25 p true false
+g1 CH 4 b true false
+f1 JP 8 b false false
+g3 GM 8 b false false
+g3 AE 7 b false false
+g3 WU 63 b false true
+g3 YF 7 b false true
+f2 JS 9 e false true
+s2 JW 57 p true false
+g1 GZ 29 b true true
+f3 VG 4 b false false
+g3 RE 0 b false true
+f2 PA 2 e false true
+f2 VK 42 e false false
+f3 AY 48 b false false
+g3 MQ 45 b false false
+g1 KI 9 b true true
+f1 HN 61 b false false
+g2 XX 8 p true true
+s1 PH 59 e true true
+g2 WD 4 p true false
+f2 WB 38 e false false
+g2 MI 5 p true false
+f1 AP 31 b false true
+g2 JJ 2 p true false
+g1 KH 30 b true false
+g1 PF 6 b true false
+g3 JT 4 b false true
+g2 MG 60 p true true
+f3 XA 45 b false true
+g2 EG 3 p true false
+insert s1
+insert g3
+insert f1
+insert s2
+insert g1
+insert f3
+insert g2
+insert f2
+list
+delete g1 CH
+delete g1 GZ
+delete g1 KI
+list
+delete f2 JS
+delete f2 PA
+list
+delete g1
+list

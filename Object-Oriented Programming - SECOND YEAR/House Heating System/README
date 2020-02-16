@@ -1,0 +1,69 @@
+Nume: Toader Sergiu-Cristian
+Grupa: 325CB
+
+
+This project is divided into two parts:
+1. Getting room and device information and creating a database from it.
+2. Interpreting that information in order to handle the operations.
+
+Java Collection FrameWork structures used:
+- ArrayList (House.java and Room.java)
+- HashMap (Device.java)
+- TreeSet (Device.java)
+
+The TimeConstants interface contains two constants used in other classes and 
+methods: ONE_HOUR_INTERVAL (length of an interval = 3600 seconds) and
+HOURS_PER_DAY (number of intervals = 24).
+
+================================================================================
+
+The structure of the database is contained in the House, Room and Device
+classes.
+
+The House class keeps general information about the house (e.g. the reference
+time stamp, global temperature - the required temperature, global humidity - the
+required humidity, the number of rooms in the house and an ArrayList of rooms).
+It has two different constructors used depending on whether humidity is taken
+into account or not. The class also encapsulates methods that return the average
+temperature and humidity by calculating the weighted mean of either the lowest
+temperature or the highest humidity from each room in the last interval, (the
+weight being the room surface). In this class, there are also methods for
+TRIGGER HEAT (which prints out YES OR NO depending on the average temperature
+and humidity and the global values), and TEMPERATURE (which updates the global
+temperature) commands.
+
+The Room class attributes: name, device and surface. The class also implements
+a method for the LIST command which calculates all the intervals from start time
+to stop time (complete intervals, incomplete ones are ignored), then iterates
+through all those intervals and lists the recorded temperatures.
+
+In the device class, temperatures and humidity values are mapped using two hash
+maps. The key represents the interval (from 0 to 23) and it is calculated using
+the getKey method by subtracting the current time from the reference time and
+dividing the result by the length of an interval (one hour). The values in the
+hash map are the temperatures/humidity values in each interval which are stored
+in a tree set. There are two reasons for the use of a TreeSet: it does not store
+duplicates and it automatically inserts the new element in order (the set is
+always sorted from lowest to highest value). The class implements methods for
+OBSERVE and OBSERVEH commands. These methods determine the interval in which the
+recorded temperature/humidity should be placed and adds it to the corresponding
+tree set. 
+
+================================================================================
+
+Managing input data and calling appropiate methods are done in the Main,
+InputData and OperationHandler classes.
+
+The OperationHandler class contains a method for each operation (TEMPERATURE,
+OBSERVE, OBSERVEH, TRIGGER HEAT, LIST), which calls the corresponding method
+from the other classes (each explained in the previous section) with parameters
+from the input file.
+
+The InputData class has methods that set information about the house, about
+each room and a method named executeCommands that scans a token and, depending
+on what it is, calls a method from the OperationHandler class using the rest of
+the tokens on that line as parameters.
+
+Finally, the Main class (containing only a main method) creates instances for
+input, output classes and for the house, sets the information for each room and
+executes all commands.

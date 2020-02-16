@@ -1,0 +1,63 @@
+Nume: Toader Sergiu-Cristian
+Grupa: 325CB
+
+
+Design patterns used in this project:
+
+Singleton - for the TeamDatabase and TeamFactory classes, since only one
+instance for each of them is required.
+
+Factory - used in the TeamFactory class to create specific instances for the
+Team subclasses.
+
+Observer - used in the competition simulation in order to link the observer
+(Team class) to the subject (Competition). After the matches, the teams are
+notified with the place that they got in the competition. Intefaces used: 
+Observer and Subject.
+
+Visitor - used in the competition simulation. Both the visitors and the visited
+are represented by the teams involved in the competition. The "visit" represents
+a match between 2 teams. Interface used: TeamVisitor.
+
+Strategy - used to choose which algorithm for calculating a teams' score to use.
+Implemented in the FootballScore, BasketballScore and HandballScore classes.
+Interface used: ScoreStrategy.
+
+
+================================================================================
+
+Task 1 - Team entry
+
+The Main class, for the team entry part, creates instances for a database in
+which teams are stored and a team factory whose purpose is to create instances
+for all team types. A scanner scans a line containing information about a team,
+including type, name, gender and number of players. After that, the next lines
+contain information about the players from that team. The factory object decides
+what kind of team should be created, creates the team using that information and
+then all the players are added. Finally, the team is added into the database and
+scanner proceedes to get information about the next team. After all the teams
+have been created and added to the database, the method listTeams from the
+TeamDatabase class is called, which outputs all information about the teams that
+have entered the competitions.
+
+================================================================================
+
+Task 2 & Bonus - Competitions
+
+Similarly to the team entry part, for the second task the main method creates
+a database containing all the teams and all the players. After that, another
+scanner determines the type of competition. Then all eligible teams for that
+competition whose names are in the competition file are added to the
+competition. The competition implementation revolves around the Visitor design 
+pattern. Every team plays with all the other team once, the "match" between them
+being a visit from one to another. During the visit, the scores obtained by the
+two teams are compared and the competition standings are updated with the
+corresponding points obtained from that match (using the method "updatePoints"
+from the Competition class). Each team holds a reference to a ScoreStrategy
+object in order to determine what algorithm to use in order to calculate the
+score of the team. After all matches have been played, the teams (who represent
+observers for the competition) are notified using the "notifyObservers" method
+from the Competition class. In that method, the names of the top 3 teams is
+written in the output file and then the "update" method for all teams in the
+competition is called. The "update" method from the Team class outputs the
+ranking of that team.

@@ -1,0 +1,74 @@
+Toader Sergiu Cristian - 325CB
+
+
+Coada de prioritate implementeaza metodele (toate in clasa MaxHeap.java):
+
+- insert(Entitate e, int priority) - linia 105
+- list() - linia 128
+- embark() - linia 154
+- delete(Entitate e) - linia 166
+
+===============================================================================
+
+Clasa Entitate este o clasa care retine un vector cu toate persoanele dintr-un
+grup/familie sau un pasager cu bilet individual. Clasa entitate este mostenita
+de clasele Grup, PasagerSingur si Familie. Clasele suprascriu metoda
+setPunctajInitial() din clasa parinte, setand un punctaj initial unic pentru
+fiecare tip de entitate.
+
+Clasa Entitate contine un vector de Persoane, o metoda add care adauga o
+persoana pe urmatoarea pozitie in vector si redimensioneaza vectorul in cazul
+in care se ajunge la dimensiunea maxima si o metoda eliminaPasager() care
+realizeaza eliminarea unui Pasager din vectorul din care face parte. Clasa
+entitate implementeaza interfata Comparable, suprascrie metoda compareTo()
+pentru a realiza comparatia dintre doua Entitati dupa prioritate.
+
+Clasa Pasager inglobeaza atributele unui pasager (nume, varsta, tip de bilet, 
+beneficii) si ii atribuie un punctaj in functie de aceste atribute. Atributele
+pentru tipul de bilet si beneficii sunt la randul lor structurate in cate o
+clasa (Bilet si Beneficiu) care le pastreaza tipul si punctajul.
+
+===============================================================================
+
+Coada de prioritate este implementata in clasa MaxHeap. Implementarea este cu
+vector si contine elemente de tip Entitate.
+
+Metoda insert adauga un nod in heap, realizeaza redimensionarea heap-ului daca
+s-a ajuns la dimensiunea maxima, dupa care aduce entitatea pe pozitia corecta in
+heap prin swap-uri succesive cu nodul parinte.
+Metoda list construieste un sir de caractere folosind un StringBuilder, care
+reprezinta heap-ul in preordine. Stringul este intors de metoda si afisat in
+fisierul de output in clasa OperationHandler. Metoda se foloseste de metoda
+recursiva appendHeap care concateneaza la StringBuilder id-ul urmatoarei
+entitati din heap la parcurgerea in preordine.
+Metoda embark intoarce radacina Heapului (Entitatea cu prioritatea cea mai
+mare), elimina radacina si realizeaza reconstruirea heapului folostind metoda
+maxHeapify.
+Metoda delete cauta entitatea in heap, o elimina si restabileste ordinea in heap
+cu ajutorul metodei maxHeapify.
+Metoda deletePasager cauta entitatea in heap si elimina pasagerul cu numele dat.
+Daca entitatea ramane fara membri, ea este elimineata din heap. In caz contrar,
+prioritatea entitatii este recalculata, restabilindu-se ordinea in heap de la
+pozitia curenta folosind metoda maxHeapify.
+
+Alte metode: swap, interschimba 2 noduri in heap; maxHeapify, metoda recursiva
+care compara prioritatile nodurilor si, folosind swap-uri intre nodul parinte
+si nodurile copii, realizeaza coborarea unui nod pana in pozitia corecta in
+arbore.
+
+===============================================================================
+
+ Clasa Main contine metoda main in care sunt instantiate:
+- Un obiect al clasei Scanner care realizeaza citirea din fisierul de intrare
+- Un obiect al clasei MaxHeap care retine coada de prioritate
+- Un obiect al clasei DateIntrare care retine persoanele si le grupeaza in
+entitati inainte ca acestea sa fie adaugate in coada de prioritate
+- Un obiect al clasei PrintWriter care realizeaza scrierea in fisierul de iesire
+- Un obiect al clasei OperationHandler care citeste a doua parte din input
+(partea cu opeatile list, embark, insert, delete) si realizeaza apelul
+corespunzator al metodelor.
+
+Se citeste numarul de pasageri, se citeste si se adauga fiecare pasager in
+entitatea din care face parte. Se citeste si se realizeaza fiecare operatie in
+parte, sirurile de caractere intoarse de metoda list fiind afisate in fisierul
+de iesire.
