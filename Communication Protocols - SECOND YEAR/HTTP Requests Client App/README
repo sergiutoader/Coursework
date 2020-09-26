@@ -1,0 +1,102 @@
+Nume: Toader Sergiu-Cristian
+Grupa: 325CB
+
+
+	
+					Tema 3 - Protocoale de comunicatii
+
+					
+Am folosit ca schelet pentru aceasta tema laboratorul 10, mai exact functiile
+din fisierele buffer.c, helpers.c, requests.c cu headerele corespunzatoare.
+
+Pentru parsarea obiectelor JSON am folosit biblioteca parson pe care am inclus-o
+in program (fisierele parson.c, parson.h).
+
+================================================================================
+
+Functia main:
+
+Se aloca memorie pentru mai multe buffere care vor retine informatii citite de
+la tastatura. Se deschide o conexiune cu serverul folosind functia
+open_connection (preluata din scheletul de laborator).
+Se asteapta continuu primirea unor date de intrare de la tastatura folosind
+un getline intr-un while care nu are conditie de oprire. Se verifica continutul
+comenzii primite de la tastatura si se executa comanda, daca este valida. Orice
+comanda invalida este ignorata (orice comanda care nu este register, login, 
+enter_library, ...). Daca s-a citit o comanda valida, se apeleaza o functie care
+construieste un mesaj corespunzator si il trimite la server, realizeaza primirea
+mesajului venit inapoi ca raspuns de la server si il afiseaza. Pentru cazurile
+register si login, inainte de apelarea functiei se realizeaza citirea de la
+tastatura a parametrilor username si password, folosind functia read_user_data
+care ofera de asemenea un prompt pentru citirea de la tastatura. Similar,
+functiile get_book, delete_book si add_book sunt precedate de apelul functiilor
+read_id sau read_book_data cu care se realizeaza citirea altor parametrii de la
+tastatura necesari pentru trimitera unor mesaje corecte la server.
+Comanda "exit" realiezaza iesirea din bucla infinita. Astfel, se inchide
+conexiunea cu serverul, se elibereaza memoria alocata la inceputul programului
+si se incheie executia programului.
+
+================================================================================
+
+Comenzi:
+
+Functiile pentru comenzi, alaturi de alte functii ajutoare sunt implementate in
+fisierul commands.c.
+
+In cazul tuturor comenzilor, in cazul in care conexiunea s-a intrerupt
+(in cazul in care functia receive_from_server a intors un mesaj gol), se
+realizeaza reconectarea la server, retrimiterea mesajului si un nou apel al
+functiei receive_from_server.
+
+Functiile care construiesc mesajele trimise catre server sunt implementate in
+fisierul requests.c. Doua dintre ele (cele pentru GET si POST) sunt preluate din
+scheletul de laborator 10 si usor modificate. Functia compute_delete_request
+este implementata dupa acelasi principiu ca cele doua mentionate anterior (Se
+construiesc pe rand liniile string-ului din mesaj).
+
+Functiile de trimitere si primire mesaje sunt implementate in helpers.c si sunt
+si ele preluate din laborator.
+
+
+Comenzile register si login: Se completeaza payload-ul cu username si password,
+se construieste request-ul de tip POST cu datele serverului (URL diferit) si
+payload-ul respectiv. Se trimite la server acest request si se primeste in
+variabila response mesajul primit de la server, urmand ca acesta sa fie afisat.
+In cazul comenzii login, se realizeaza extragerea cookie-ului din mesajul primit
+si salvarea lui in variabila cookie atat timp cat utilizatorul este logat.
+
+Comanda enter_library: Se completeaza payload-ul cu cookie-ul obtinut la logare,
+se construieste request-ul de tip GET cu datele serverului si payload-ul. Se
+trimite la server request-ul si se realizeaza primirea raspunsului si afisarea
+sa. Se extrage si parseaza token-ul JWT necesar pentru a valida accesul la
+biblioteca (get_token).
+
+Parsarea token-ului: Se extrage mai intrai payload-ul din mesajul primit
+folosind functia get_payload. Dupa se folosesc functiile din biblioteca parson
+astfel: se retine intr-un JSON_Value rezultatul obtinut de functia json_parse
+_string aplicata pe payload. Se extrage intrarea din obiectul j_payload care are
+drept cheie cuvantul "token" - se foloseste functia json_object_get_string. Se
+copiaza in variabila token rezultatul obtinut anterior si se elibereaza memoria.
+
+Comanda add_book: Se completeaza payload-ul cu informatiile despre carte, se
+construieste request-ul de tip POST cu datele serverului si payload-ul
+realizat anterior. Se trimite mesajul la server, se primeste si se afiseaza
+raspunsul de la server.
+
+Comanda get_books: Se construieste request-ul de tip GET cu datele serverului
+fara un payload, se trimite request-ul la server. Se primeste si afiseaza
+response-ul de la server. Comanda afiseaza informatii despre toate cartile
+adaugate anterior pe contul respectiv.
+
+Comenzile get_book si delete_book: Se completeaza payload-ul cu id-ul cartii
+care va fi adaugata/stersa. Se construieste request-ul de tip GET/DELETE cu
+datele serverului, cu url-ul la care s-a adaugat id-ul cartii si cu payload-ul.
+Se trimite la server request-ul, se primeste si se afiseaza response-ul de la
+server.
+
+Comanda logout: Se completeaza payload-ul cu cookie-ul folosit pentru logarea
+la server. Se construieste request-ul de tip GET cu datele serverului si cu
+payload-ul. Se trimite request-ul la server si se realizeaza primirea si
+afisarea raspunsului. Cookie-ul si token-ul folosite pe parcusul sesiuniii sunt
+sterse pentru a evita situatii de eroare (de exemplu accesarea bibliotecii
+cat timp utilizatorul nu este logat).

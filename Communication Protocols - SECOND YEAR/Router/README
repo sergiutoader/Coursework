@@ -1,0 +1,131 @@
+
+Nume: Toader Sergiu-Cristian
+Grupa: 325CB
+
+				Tema 1 - Protocoale de Comunicatii
+
+
+
+Fisiere folosite (pe langa cele din scheletul temei): arp.c, rTable.c, icmp.c.
+
+Explicarea metodei main si a algoritmului care sta la baza functionarii
+routerului:
+
+Este initializata tabela de rutare. Initial, este calculata dimensiunea tabelei
+folosind functia getRTableSize care determina numarul de linii prin retinerea
+numarului de caractere '\n' din fisier. Tabela este citita intr-o structura de
+tip rTable (declarata in skel.h) care reprezinta un vector de elemente de tip
+routeEntry. routeEntry are campuri de tip uint32_t pentru prefix, next_hop, mask
+si un camp int pentru interface. Citirea se face folosind functia setRouteTable
+astfel: se face citire linie cu linie, retinand intrarile intr-un vector de
+string-uri. Se face split pe fiecare linie in parte dupa spatiu, folosind
+strtok, iar in cazul primelor 3 campuri, se mai face o data split dupa punct cu
+functia getIP. Se face astfel trecerea de la tipul string la tipurile numerice
+uint32_t si int.
+Tabela este sortata folosind functia qsort din stdlib.h, comparatorul fiind o
+functie care sorteaza tabela crescator dupa prefix, iar in caz de egalitate,
+crescator dupa masca. Sortarea se face astfel in O(n*logn). Cautarea in tabela
+se face in O(log n), fiind implementat un algoritm de cautare binara. In
+momentul in care s-a gasit un entry pentru care regula (ip & masca = prefix), se
+face o parcurgere in vector (in timp constant, deoarece in practica exista un
+numar mic de entry-uri cu acelasi prefix, dar cu masti diferite) pana la masca
+cea mai mare. Avem garantia ca aceasta va fi ruta optima datorita criteriului
+dupa care am sortat tabela. Sunt initializate dupa sortare 2 structuri de date:
+arp_list care este o lista simpla inlantuita care va retine entry-urile din
+tabela arp si q care este coada de asteptare pentru pachete. Ambele sunt initial
+vide.
+
+================================================================================
+
+Bucla programului: Este primit un pachet, dupa care este declarat un pointer
+catre partea de ether_header a pachetului. Se verifica tipul de pachet (existent
+in campul ether_type). Daca pachetul este de tip IP, se declara alti 2 pointeri
+pentru header-ul de IP si header-ul de ICMP. In cazul in care adresa destinatie
+este chiar adresa IP de pe interfata routerului, iar pachetul este de tip ICMP
+ECHO REQUEST, se completeaza si se trimite un alt pachet de tip ICMP ECHO REPLY
+catre sursa folosind functia send_ICMP_ECHO. Mai departe, se verifica
+checksum-ul folosind functia checksum (preluata din scheletul de laborator). In
+cazul in care checksum-ul este gresit, pachetul este aruncat. Daca TTL-ul are
+o valoare mai mica sau egala cu 1, se trimite catre destinatie un pachet de tip
+ICMP_TIME_EXCEEDED folosind o functie similara si se arunca pachetul. Se
+interogheaza apoi tabela de rutare folosind functia de cautare binara si se
+verifica daca rezultatul intrors de functie este NULL. Daca nu a fost gasita
+nicio ruta, se trimite un alt pachet de tip ICMP, DEST_UNREACHABLE catre sursa
+si se arunca pachetul. Altfel, se decrementeaza valoarea pentru TTL si se
+recalculeaza checksum-ul. Se interogheaza apoi tabela arp. In cazul in care
+nu exista o adresa MAC pentru adreasa IP destinatie in tabela, pachetul se 
+introduce in coada de asteptare, si se trimite un pachet de tip ARP_REQUEST
+catre acea adresa IP. Daca a fost gasita o adresa MAC in tabela ARP, aceasta se
+copiaza in header-ul ether si se forward-eaza pachetul.
+Daca pachetul primit este de tip ARP, se declara un pointer catre header-ul ARP
+al pachetului. Se verifica opcode-ul pachetului. Daca este de tip ARP_REQUEST,
+se trimite catre sursa un ARP_REPLY, altfel, daca este un ARP_REPLY la un 
+ARP_REQUEST anterior, se extrag adresa IP si MAC, se adauga in tabela ARP
+intrarea noua, apoi se verifica coada de asteptare a pachetelor, extragandu-se
+pe rand si verificandu-se pentru fiecare daca noua intrare le permite sa poata
+fi trimise. Astfel, pentru toate pachetele ce pot fi trimise, se seteaza adresa
+MAC in ether_header si se trimit, dupa care, coada de asteptare este refacuta
+folosind o coada auxiliara.
+
+================================================================================
+
+Functii pentru trimiterea pachetelor de tip ICMP (icmp.c):
+
+Structura pachetelor de tip ICMP folosite la tema este asemanatoare, astfel
+completarea lor are multe elemente comune. Pentru toate, se initializeaza
+pointeri pentru header-ele pachetului primit, se declara un pachet nou si se
+initializeaza pointeri pentru header-ele sale. Se completeaza campurile pentru
+header-ul de ethernet astfel: Adresa destinatie - adresa sursa a pachetului
+primit inainte, Adresa sursa - adresa MAC a routerului de pe interfata pe care a
+venit pachetul primit inainte, Tipul de pachet - ETHERTYPE_IP. Se seteaza mai
+departe campuri pentru header-ul de IP, completandu-se pentru fiecare pachet in
+parte tipul si codul, iar pentru toate pachetele, adresa IP a sursei, care se
+obtine folosind functia get_inteface_ip. Se recalculeaza check-sum-ul si se
+trimite pachetul. Ca paticularitate, pachetele de tip ICMP_ECHO_REPLY seteaza
+ca id si secventa a pachetului, aceeasi ip si secventa pe care le-a primit in
+pachet.
+
+================================================================================
+
+Functii pentru pachete de tip ARP (arp.c)
+
+Pentru functia send_ARP_REQUEST, se determina adresa MAC proprie folosind
+functia get_interface_mac si se seteaza campul de adresa MAC a sursei cu acesta.
+Adresa MAC destinatie este setata ca broadcast. Se completeaza campurile din
+ARP_HEADER cu date specifice protocolului ARP si, implicit pachetelor de tip
+cerere, dupa care se completeaza header-ul ETHER_ARP. Adresa Hardware destinatie
+este setata cu 0, Sender protocol address este adresa IP a routerului, target
+protocol address este adresa IP a destinatiei iar Sender hardware address a
+sursei este adresa MAC a routerului pe care am obtinut-o la inceputul functiei.
+Pentru functia send_ARP_REPLY pasii de completare a header-ului de ethernet si
+de arp sunt similari. Aici insa, se verifica daca request-ul mi-a fost adresat
+mie, completandu-se campul de adresa hardware sursa si trimitandu-se pachetul
+in caz afirmativ. Altfel, se interogheaza tabela arp, se completeaza MAC-ul
+destinatiie de acolo si se transmite pachetul.
+
+================================================================================
+
+Alte functii folosite:
+
+Pentru date / campuri mai mari de 2 octeti ale pachetelor, se folosesc functiile
+de conversie htons, htonl, ntohs, ntohl pentru a asigura corectitudinea datelor
+si faptul ca acestea sunt interpretate in formatul corect (Big sau Little Endian
+). Functia getTPA realizeaza o conversie de la tipul uint8_t * la uint_32 pentru
+adrese care se gasesc in header-ul ether_arp. Functia getIP_ARP_FORMAT face
+conversia inversa (de la intreg fara semn la uint8_t *);
+
+================================================================================
+
+Mod de rezolvare / Probleme intampinate
+
+Pentru debugging si testare am folosit utilitarele puse la dispozitie (mininet
+si wireshark). Printre probleme intampinate, se enumera: probleme cu checkerul,
+care ofera in anumite momente un punctaj diferit la testari diferite pe aceeasi
+versiune a temei, probleme cu mininet, care nu pornea deoarece portul era ocupat
+iar comanda sugerata pe forum si in cerinta temei nu rezolva problema, a trebuit
+sa caut PID-ul procesului care ocupa portul si sa il omor manual. Poate cel mai
+dificil aspect al temei a fost acela de a completa headerele pachetelor,
+deoarece in multe situatii, nu eram sigur ce valori ar trebui completate pentru
+a asigura corectitudinea pachetului si era destul de dificil, chiar si cu
+utilitarele mentionate sa descopar o problema in cazul in care unul din campuri
+era eronat.

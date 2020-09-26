@@ -1,0 +1,134 @@
+
+Nume: Toader Sergiu-Cristian
+Grupa: 325CB
+
+					Tema 1 - Paradigme de Programare
+
+
+Observatii:
+1) Toate functiile sunt realizate in fisierul Query.hs.
+2) Testarea pe checker-ul local a intregii teme, cu tot cu bonus, dureaza in
+jur de 6 minute.
+
+  
+1) Citirea tabelului - se realizeaza cu functia read_table. Se face mai intai 
+split la Entry-uri dupa separatorul de linii, apoi split pe fiecare lini dupa
+separatorul de coloane. Este implementata functia auxiliara splitBy care
+primeste un separator si un String si parcurge caracter cu caracter String-ul,
+iar atunci cand gaseste un delimitator, nu adauga nimic si trece la urmatorul
+element, adaugand caractere la elementul curent in caz ca nu e delimitator.
+
+Functiile getHeader, getEntries - functii auxiliare care intorc headerul si
+vectorul de entry-uri dintr-un tabel.
+
+
+2) Afisarea tabelului - se realizeaza in functia show_table. Functioneaza pe
+baza concatenarii delimitatoarelor orizontale, a header-ului la care s-au
+adaugat si delimitatorii verticali si Entry-urile din tabel cu spatii si
+delimitatori.
+Functii folosite: 
+- getLengths - pentru lungimea fiecarui element din tabel
+- getMaxLengths - calculeaza lungimea maxima pentru fiecare coloana din tabel
+- getLineLength - intoarce lungimea unei linii din tabelul rezultat
+- getHorizontalDelimiter - intoarce un sir de '-' de lungimea primita ca
+parametru
+- addVerticalDelimiters -> adauga '|' la un entry din tabela
+- addSpacesToTable - adauga atat la header, cat si la entries spatii astfel
+incat toate field-urile care sunt pe aceeasi coloana sa aiba aceeasi lungime.
+Practic, pentru un field care are initial lungimea x, va adauga y-x spatii, unde
+y este lungimea maxima pentru acea coloana.
+
+
+3) Selectarea coloanelor - Se calculeaza pe baza listei de nume ale coloanelor o
+lista de indici, se extrag coloanele cu indicii respectiv si se combina acele
+coloane intr-un singur tabel.
+Functii folosite: 
+- getColumnIndex -> intorace indicele pe baza unui nume de coloana
+- getColumn -> extrage o coloana din tabel pe baza indicelui intors de functia
+anterioara
+- getAllColumnIndexes -> Primeste o lista de nume de coloane si aplica functia
+getColumnIndex pentru toate aceste nume, obtinand o lista de indici
+- mergeTables -> face merge intre 2 coloane din tabel pe baza concatenarii a
+doua matrice (zipWith (++))
+- mergeAllColumns -> primeste o lista de indici si realizeaza combina toate
+coloanele din matrice folosind functia mergeTable intr-un foldr, acumulatorul
+fiind un tabel vid (construit folosind replicate la lista vida)
+
+
+4) Limitarea numarului de intrari - implementarea este similara cu cea din cazul
+selectarii coloanelor, insa se va folosi penru extragerea unei coloane si
+functia take, pentru a lua doar primele valori din tabel.
+
+
+5) Filtrarea coloanelor - aplica anumite restrictii pentru intrarile din tabel,
+eliminand intrarile care nu respecta aceste restrictii.
+Functii folosite:
+- filterLowerThan/EqualTo/In - toate construiesc o tabela noua aplicand un
+filter pe liniile sale cu o functie de filtrare.
+- valueLower - functie de conditie care verifica daca campul curent din tabel
+este mai mic decat valoarea data
+- valueEqual - functie de conditie care verifica daca campul curent din tabel
+este egal cu valoarea data
+-valueIn - functi de conditie care verifica daca campul curent din tabel face
+match cu una din valorile date
+
+
+6) Negarea Filtrelor - Atunci cand este folosit Not, se vor folosi alte 3 filtre
+care au o implementare complementara a celor 3 filtre de la punctul 5). Sunt
+definite astfel filterHigherThan, filterNotEqualTo, filterNotIn, cu functiile
+de comparare care produc un rezultat invers fata de cele de la punctul 5).
+
+
+7) Query :|| Query (reuniune) - pentru operatia de reuninune, se folosesc 3
+functii:
+- transposeEntries - care este practic o functie de transpunere a unei matrice -
+care realizeaza construirea liniilor din transpusa prin maparea functiei head
+pe matrice, apelandu-se recursiv apoi pe maparea functiei tail pe matrice.
+- mergeEntries - face horizontal join pe 2 tabele (zipWith (++))
+- reunion - functia care realizeaza operatia :|| propriu-zisa. Aplica
+mergeEntries pe transpusele celor doua tabele, rezultatul fiind apoi transpus la
+loc (vertical join).
+
+
+8) Functiile same_zone, male_within_age, mixed:
+
+-same_zone -> se filtreaza dupa zona, apoi se elimina intrarea cu acelasi id ca
+cel primit ca parametru, apoi se selecteaza coloanele cerute. Se foloseste o
+functie auxiliara getZone care intoarce locatia userului cu ID-ul dat 
+
+-male_within_age -> se filtreaza dupa sex, apoi dupa varsta, selectandu-se apoi
+coloanele cerute
+
+-mixed - selecteaza liniile care au match pe una din ocupatii, apoi pe una din
+zone, apoi se face selectia dupa varsta si se alege coloana user_id
+
+
+9) Cosine similarity
+
+Ideea de baza - se creeaza pentru fiecare utilizator o lista cu toate perechile
+(film, nota), se genereaza toate perechile de utilizatori (user1, user2) cu
+proprietatea ca user1 < user2, se calculeaza pentru fiecare pereche cosinusul
+unghiului dintre preferintele lor, si se genereaza tabela cu coloanele user1,
+user2 si valoarea obtinuta.
+Functii folosite:
+- get_max_id - calculeaza id-ul maxim din tabel
+- create_list_1_id - construieste pentru un id o lista de perechi (film - nota)
+- create_pair_list - pentru fiecare user, aplica functia anterioara
+- sort_pair_list - sorteaza listele de perechi dupa id-ul filmelor
+- get_product - calculeaza suma de produse xi * yi care apar la numarator in
+formula pentru calcularea cosinusului. Calculul se face comparand mereu primele
+elemente din cele 2 liste. Daca elementele sunt egale, se adauga la acumulator
+produsul lor. Daca unul este mai mare, se trece la urmatorul in cealalta lista.
+- pair_denominator - asociaza unei liste, radical din suma patratelor valorilor.
+Se face astfel un "caching" al acestei valori pentru a nu mai fi calculata de
+fiecare data pentru acelasi utilizator.
+- get_paired_users - intoarce toate perechile de useri posibile
+- get_score - calculeaza scorul ca numarator / numitor
+	- getDenominator - radical din suma patratelor ratingurilor lista
+	primului, inmultit cu acelasi radical pentru al doilea utilizator
+	- getNumerator - produsul de forma xi * yi
+- create_entry - primeste 2 user_id si creeaza un entry al tabelului
+- get_list_at_idex - intoarce o lista de perechi din lista mare de la o pozitie
+data
+- create_entries - contruieste toate intrarile din tabelul final
+- create_cosine - construieste tabelul final

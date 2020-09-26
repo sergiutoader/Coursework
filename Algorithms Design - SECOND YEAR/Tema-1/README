@@ -1,0 +1,107 @@
+Nume: Toader Sergiu-Cristian
+Grupa: 325CB
+
+
+					Tema 1 - Proiectarea Algoritmilor
+
+
+
+Observatie - Pentru fiecare task, rezolvarea cerintelor se realizeaza in metoda
+"solve". Citirea si parsarea input-ului se realizeaza in metoda "readInput",
+scrierea outputului se realizeaza in metoda "writeOutput",
+
+================================================================================
+
+Problema 1
+
+Metode de rezolvare: Programare dinamica, Divide et Impera
+
+Pentru primul tip de instructiuni, exista un caz de baza (pentru o bancnota).
+Numarul de aranjari pentru un teanc de o bancnota este 5, deoarece sunt 5 tipuri
+diferite de bancnote. Pentru cazul k, deoarece indiferent de bancnota, exista
+2 alegeri posivile la cazul k+1, recurenta este de forma:
+
+aranjari(k) = 2 * aranjari(k-1)
+aranjari(1) = 5
+
+Sau, prin restrangere:
+
+aranjari(n) = 5 * 2^(n-1)
+
+Care se poate calcula in timp logaritmic (O(log n)) printr-un algoritm de tip
+Divide et Impera de exponentiere logaritmica, implementat in metoda fastPow().
+Complexitate spatiala: O(1).
+
+
+Pentru al doilea tip de instructiuni, se foloseste o matrice de 5 linii si o
+coloana pentru a calcula separat numarul de subarbori pentru fiecare bancnota.
+Pe prima coloana se pune valoarea 1 (o singura aranjare pentru fiecare
+bancnota). Pentru pasul i, fiecare bancnota va depinde de numarul de aranjari la
+pasul anterior ale bancnotelor care urmeaza dupa ea. La final, numarul total
+de aranjari va fi suma valorilor obtinute pe ultima coloana.
+
+Complexitate temporala: O(n).
+Complexitate spatiala: O(n) - desi avem o matrice, ea are una din dimensiuni
+constanta (5).
+
+In ambele cazuri, operatiile de inmultire si adunare se realizeaza folosind
+formulele de a obtine restul impartirii rezultatului la MOD.
+
+
+================================================================================
+
+Problema 2
+
+Metoda de rezolvare - Greedy
+
+Este folosita o clasa auxiliara, "Bucata" care contine coordonatele de inceput
+pentru o bucata de gard. Implementeaza metoda compareTo folosita in a sorta
+bucatile de gard.
+
+Bucatile de gard sunt sortate descrescator dupa coordonata de sfarsit, iar in
+caz de egalitate, crescator dupa coordonata de start. Este folosita o variabila
+auxiliara care retine bucata curenta de gard care trebuie folosita. Orice bucata
+care urmeaza si care are coordonata de start mai mare decat a piesei curente va
+fi redundanta, deoarece este cuprinsa integral in interiorul bucatii curente.
+In caz contrar, daca am gasit o bucata cu coordonata de start mai mica, ea nu
+mai este redundanta, ci va deveni noua bucata curenta cu care vom compara
+urmatoarele bucati.
+
+Complexitate temporala: O(n*(log n)) - datorita sortarii.
+Complexitate spatiala: O(1), folosim doar o variabila auxiliara.
+
+
+================================================================================
+
+Problema 3
+
+Metoda de rezolvare - Programare dinamica
+
+Este folosita o clasa auxiliara, interval, care retine pentru un elev intervalul
+in care se afla numarul de bomboane pe care il poate primi. Se aloca o matrice
+in care liniile reprezinta elevii iar coloanele numarul de bomboane. dp[i][j]
+are deci semnificatia: in cate moduri se pot imparti j bomboane la i elevi.
+Cazul de baza va fi completat pe linia 1 din matrice cu numarul de moduri in
+care pot fi impartite bomboane lui (cu valoarea 1 in intervalul primului elev si
+cu 0 in exteriorul intervalului ). Pe caz general, modurile in care se pot
+imparti j bomboane la i elevi reprezinta suma numarului de moduri in care se pot
+imparti bomboane la i-1 elevi, cu conditia ca numarul de bomboane sa fie cuprins
+intre j minus marginea superioara a intervalului si j minus marginea inferioara.
+
+dp[1][x1...y1] = 1
+dp[i][j] = dp[i-1][j-yj] + d[i-1][j-yj+1] + ... = dp[i-1][j-xj-1] + dp[i-1][j-xj]
+
+dp[n][m] va fi rezultatul final.
+
+Complexitate temporala : O(n*m*LMaxInterval) - datorita parcurgerii matricei
+element cu element si al calculului sumei de elemente de pe pozitiile anterioare
+Complexitate spatiala: O(n*m) - generata de matricea dp
+
+
+================================================================================
+
+Problema 4
+
+Metoda de rezolvare - Greedy
+
+TODO

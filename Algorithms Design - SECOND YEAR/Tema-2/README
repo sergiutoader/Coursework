@@ -1,0 +1,116 @@
+Nume: Toader Sergiu-Cristian
+Grupa: 325CB
+
+						Tema 2 - Proiectarea Algoritmilor
+
+
+
+Problema 1:
+
+Datele de intrare se retin in urmatoarele structuri de date:
+- adj (vector de ArrayList<Integer>) - retine vecinii fiecarui nod din graf
+- startingCities - (HashSet<Integer>) - retine multimea de orase din care lorzii
+incep cautarile (se foloseste HashSet pentru extragere unui element in timp
+constant)
+- blockedCities - vector care retine permutarea oraselor (in ordinea in care
+acestea vor fi blocate)
+
+Este definita o functie auxiliarea bfs care primeste ca parametru vectorul color
+care retine pentru fiecare nod din graf daca este vizitat sau nu. Parcurgerea
+bfs se realizeaza intotdeauna din nodul 1 in care se afla Robin Hood. Se
+introduce initial nodul 1 intr-o coada. Se extrage primul nod din coada si se
+introduc toti vecinii sai nevizitati. Se verifica la fiecare extragere daca
+vreunul din vecini este un nod de start. Functia intoarce false daca s-a putut
+ajunge din 1 intr-un nod de start si true daca parcurgerea BFS s-a incheiat fara
+sa se ajunga la unul din nodurile de start.
+
+Este definita o functie auxilieara blockFirstXCities care seteaza in vectorul
+color 1 pentru primele X elemente si 0 in rest.
+
+Functia solve - determina numarul minim de orase ce trebuie blocate. Se verifica
+folosind o parcurgere BFS din nodul 1 daca se poate ajunge in nodurile din care
+lorzii incep cautarea.
+Pentru a determina numarul minim de orase, se realizeaza o cautare binara.
+Cautarea se realizeaza intr-un interval [start, end] (initializat cu valorile
+[0, n-1]), mereu in mijlocul acestui interval. Se incearca prima oara mid = K/2
+si se actualizeaza variabilele start si end (capetele intervalului de cautare)
+in functie de rezultatul obtinut in urma BFS pana cand start si end devin egale.
+Practic, reducem mereu intervalul de cautare la jumatate, pana cand lungimea
+acestuia devine 1 iar valoarea din interval este cea cautata.
+
+Complexitate: O((log K) * (n + m))
+(Complexitatea cautarii binare * complexitatea cautarii BFS)
+
+================================================================================
+
+
+Problema 2:
+
+Problema presupune determinarea drumului minim de la sursa la destinatie. Fiind
+vorba despre un graf orienat aciclic, acest lucru se poate realiza prin sortarea
+topologica a grafului si relaxarea muchiilor in ordinea data de sortarea
+topologica.
+Pentru retinerea muchiilor dintre noduri, se foloseste structura de date adj -
+un vector de ArrayList<Edge>. Edge este o clasa ce contine campul node (nodul
+destinatie) si cost (costul muchiei). Indicele din vector reprezinta nodul sursa
+al muchiei.
+
+Este folosita functia auxiliara topoSort care intoarce o permutare a multimii
+nodurilor 1..n in ordine topologica. Se porneste din fiecare nod nevizitat si
+se realizeaza o parcurgere dfs din acel nod. 
+Functia dfs realizeaza parcurgerea mentionata anterior.
+
+Functia solve deterimina valoarea efortului minim de a ajunge de la sursa la
+destinatie. Se foloseste structura de date reprezentata de vectorul d care va
+retine distantele de la sursa la fiecare nod. Se initializeaza distantele cu 0
+pentru sursa si infinit in rest. ArrayList-ul sorted retine ordinea topologica a
+nodurilor din graf. Pentru fiecare nod din sorted si se realizeaza relaxarea
+tuturor muchiilor de la acel nod la vecinii sai. Rezultatul se va afla la final
+in d[dest].
+
+Complexitate: O(|V| + |E|)
+(Sortare topologica O(|V| + |E|);
+Relaxarea muchiilor: O(|V| + |E|))
+
+================================================================================
+
+Problema 3:
+
+Structuri de date declarate global:
+- adj - vector de liste cu elemente de tip Edge - retine muchiile din graf
+- drum - o stiva folosita pentru retinerea drumului de la sursa la destinatie
+- p - vector de parinti
+
+Clasa Edge - Edge este o clasa ce contine campul node (nodul destinatie) si
+cost (costul muchiei). Indicele din vector reprezinta nodul sursa al muchiei.
+Clasa implementeaza interfata Comparable pentru a putea compara muchiile dupa
+cost. Acest lucru este necesar deoarece muchiile vor fi introduse intr-o coada
+de prioritati.
+
+La baza rezolvarii acestei probleme se afla algoritmul Dijkstra. Metoda solve
+va intoarce procentul maxim de energie ramas in urma parcurgerii grafului de la
+sursa la destinatie. Relaxarea va fi de fapt calcularea procentului ramas din
+energie in urma parcurgerii muchiei. Se va urmari calcularea drumului pentru
+care procentul de energie ramane cat mai mare (practic, calcularea unui drum
+maxim, daca ne raportam la procentul de energie).
+Lista d va retine procentele de energie ramase in fiecare nod. Se initializeaza
+vectorii d si p (100% energie in 0 si 0% energie in rest). Valorile din p au
+valorile initiale -1, cu semnificatia ca nodurile nu au setat ca parinte niciun
+alt nod. Sunt folosite aici doua structuri de date: visited (un HashSet), in
+care se vor adauga nodurile vizitate si q (coada de prioritate) in care se vor
+adauga muchiile relaxate. Initial, se adauga un element Edge cu node = 1 si
+energie 100%. Cat timp coada mai contine muchii, se extrage nodul destinatie al
+primei muchii si se adauga in setul de noduri vizitate. Se parcurg toti vecinii
+acestui nod si se incearca relaxarea tuturor muchiilor care pornesc din nod.
+Relaxarea inseamna, in acest caz, marirea procentului de energie ramas prin
+parcurgerea acesti muchii (valoarea d.get(nod)). Daca relaxarea este posibila,
+se seteaza valoarea maxima noua, se salveaza u ca fiind parinte al nodului nod
+si se adauga muchia relaxata in coada.
+La final, se adauga pe stiva drumul destinatie - sursa. Se foloseste o stiva
+deoarece, parcurgand drumul dinspre destinatie spre sursa cu ajutorul
+vectorului p, acesta va fi in ordine inversa. Astfel, cand sunt extrase
+elementele din stiva, acestea vor fi in ordine corecta. Rezultatul final,
+(valoarea energiei) va fi produsul dintre procentul maxim si valoarea initiala
+a energiei.
+
+Complexitate: O(|V| + |E|) - similara unui algoritm Dijkstra clasic.
