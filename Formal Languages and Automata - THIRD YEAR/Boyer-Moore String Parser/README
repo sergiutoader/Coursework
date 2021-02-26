@@ -1,0 +1,64 @@
+Nume: Toader Sergiu-Cristian
+Grupa: 335CB
+						
+					Tema 1 - Limbaje Formale si Automate
+
+
+Observatie: Local, rularea checker-ului pe toate testele dureaza aproximativ 9
+secunde.
+
+
+Implementare:
+
+Am importat biblioteca sys pentru a accesa parametrii din linia de comanda
+(numele fisierelor de input si output). Din fisierul de input extrag pattern-ul
+si sirul in care se va realiza cautarea, asignand variabilele pattern si text cu
+aceste valori. Calculez matricea delta cu rol de tabel de parsare, apoi parcurg
+textul si identific match-urile cu pattern-ul pe baza matricii delta. Concatenez
+la variabila output pozitiile la care se realizeaza potrivirile folosind functia
+create_output, apoi afisez in fisierul de output rezultatul obtinut.
+
+Functii folosite:
+
+- get_index(letter) si get_letter(index) -> folosite pentru a realiza conversia
+intre o litera din alfabet si pozitia acesteia in alfabet si invers.
+
+- get_longest_suffix(string, pattern) -> primeste un sir si un pattern si
+intoarce o valoare care reprezinta lungimea celui mai lung sufix din sir care
+face match cu un prefix din pattern. 
+Se calculeaza pozitia de la care se incepe cautarea in string. Nu are rost sa
+se inceapa de la inceputul string-ului. De exemplu, daca string-ul are 50 de
+caractere, iar pattern-ul are 3, cautarea in string incepe de la pozitia 47,
+deoarece orice sufix al sirului care incepe de la o pozitie anterioara nu va
+putea fi un sufix care sa se potriveasca cu pattern-ul, deoarece ar fi mai lung.
+Se verifica apoi daca ultimul caracter din sir se gaseste in pattern. Daca nu se
+gaseste, inseamna ca nu exista niciun sufix pentru sir, iar functia va intoarce
+0. Se evita astfel comparatii redundante.
+In subsirul ramas (numit search_str), se compara fiecare sufix (de la cel mai
+mare la cel mai mic) cu un prefix din pattern de aceeasi dimensiune. In cazul
+unei potriviri (care este si potrivirea de dimensiune maxima, datorita ordinii
+de parcurgere a sufixelor), functia va intoarce dimensiunea sufixului gasit.
+In cazul in care nu s-a gasit nicio potrivire, functia va intoarce 0.
+
+- compute_delta() -> functia care calculeaza matricea delta pe baza pattern-ului
+Matricea delta va avea cate o linie pentru fiecare prefix al pattern-ului
+(inclusiv prefixul vid) si 26 de coloane pentru fiecare litera a alfabetului.
+Un element din aceasta matrice de pe linia i si coloana j va fi indicele starii
+in care se ajunge daca atasam prefixului corespunzator liniei i caracterul din
+alfabet de la pozitia j.
+Setez prima linie din matrice cu 1 pe pozitia corespunzatoare primei litere din
+pattern si cu 0 in rest. (Deoarece pentru prefixul vid, doar prima litera din
+pattern poate produce un prefix de lungime 1 valid).
+Se seteaza urmatoarele linii din matrice astfel: se concateneaza fiecare
+caracter din alfabet la prefix si se calculeaza starea urmatoare folosind
+functia get_longest_suffix. Se repeta procedeul pentru fiecare linie ramasa. La
+final, functia intoarce matricea delta calculata.
+
+- create_outptut(delta) -> construieste sirul de caractere continand output-ul
+programului. Se utilizeaza variabila state care va retine starea in fiecare
+moment al iteratiei prin sir. Se incepe cu state = 0. Se itereaza prin sir,
+realizandu-se pe baza matricei delta tranzitii intre stari in functie de
+caracterele citite. Daca starea este egala cu lungimea pattern-ului, am
+identificat un pattern in text. Se concateneaza la output pozitia de start a
+pattern-ului gasit in text. Functia intoarce string-ul output dupa incheierea
+iteratiei.

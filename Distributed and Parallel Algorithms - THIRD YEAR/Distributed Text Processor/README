@@ -1,0 +1,179 @@
+Nume: Toader Sergiu-Cristian
+Grupa: 335CB
+
+
+					Tema 3 - Algoritmi Paraleli si Distribuiti
+
+
+Observatii: 
+
+1. La rularea checker-ului local am PASSED pe toate testele, precum si pe
+testele de scalare si citire in paralel:
+
+~~~~~~~~~~~~~~~ ESTABLISHING BASE TIME ~~~~~~~~~~~~~~
+Test input1.txt took 0.003710031509399414 seconds
+Test input2.txt took 0.32700395584106445 seconds
+Test input3.txt took 1.0316309928894043 seconds
+Test input4.txt took 18.274389028549194 seconds
+Test input5.txt took 25.878193855285645 seconds
+
+~~~~~~~~~~~~~~~~~~~ RUNNING TESTS ~~~~~~~~~~~~~~~~~~~
+Test input1.txt took 0.33151888847351074 seconds
+Test input2.txt took 1.216257095336914 seconds
+Test input3.txt took 1.4665050506591797 seconds
+Test input4.txt took 11.927999019622803 seconds
+Test input5.txt took 14.60288691520691 seconds
+
+Test input1 is correct	SCORE = 2
+Test input2 is correct	SCORE = 4
+Test input3 is correct	SCORE = 6
+Test input4 is correct	SCORE = 8
+Test input5 is correct	SCORE = 10
+
+~~~~~~~~~~~~~ DOES IT READ IN PARALLEL? ~~~~~~~~~~~~~
+IT DOES
+SCORE = 10
+
+~~~~~~~~~~~~~~~~~~~ DOES IT SCALE? ~~~~~~~~~~~~~~~~~~
+IT DOES :)
+SCORE = 10
+
+
+2. Makefile-ul contine reguli pentru build, run si clean. Metoda run asteapta
+un parametru si se executa in felul urmator:
+
+make run INFILE=<nume fisier input>
+
+
+================================================================================
+
+Fisierul stringProcessing.c contine functii pentru prelucrarea sirurilor de
+caractere ce vor fi apelate de catre workeri:
+
+getNewHorrorLen - Primeste un paragraf si calculeaza dimensiunea noului paragraf
+rezultat din aplicarea filtrului Horror pe acesta (determina cate consoane vor
+fi dublate).
+
+doubleConsonants - functia care dubleaza consoanele unui cuvant. Construieste
+un sir nou de dimensiune determinata de functia getNewHorrorLen si parcurge
+cuvantul vechi, introducand vocalele odata si consoanele de 2 ori in cuvantul
+nou.
+
+upperEvenChars - functia primeste un cuvant si transforma literele de pe
+pozitii pare 
+
+upperFirstChar - face upper pe primul caracter din cuvantul de la input daca
+acesta este litera mica.
+
+reverseWord - primeste un cuvant si intoarce cuvantul inversat. Parcurge
+caracter cu caracter cuvantul initial si aseaza caracterele in pozitie simetrica
+fata de mijloc (la len - i - 2 pentru i).
+
+concatDelimiter - concateneaza delimitatorul la paragraf. Localizeaza
+delimitatorul pe baza unui duplicat al paragrafului.
+
+applyFilter - functie care primeste un filter(pointer la una din functiile de
+mai sus) si aplica filtrul pe cuvintele unui paragraf. Acesta primeste si
+word_frequency care reprezinta frecventa cu care filtrul este aplicat. Se
+imparte paragraful in cuvinte folosind strtok si se concateneaza cuvintele pe
+care se aplica filtrul sau cuvintele ramase la fel ca inainte (in functie si de
+frecventa de aplicare a filtrului), alaturi de delimitatoare la un paragraf nou.
+Se copiaza continutul noului paragraf construit peste continutul vechiului
+paragraf folosind memcpy.
+
+applyHorror - aplica filtrul doubleConsonants cu o frecventa egala cu 1 (pe 
+fiecare cuvant din paragraf).
+applyComedy - aplica filtrul upperEvenChars cu o frecventa egala cu 1.
+applyFantasy - aplica filtrul upperFirstChar cu o frecventa egala cu 1.
+aoolyScienceFiction - aplica efectul reverseWord cu o frecventa egala cu 7
+(pe fiecare al 7-lea cuvant din paragraf).
+
+
+================================================================================
+
+Fisierul main.c contine functia main in care sunt create si finalizate
+procesele si in care sunt implementate functiile apelate de thread-uri, atat
+cele din nodul MASTER, cat si cele din nodurile WORKERS, precum si alte functii
+auxiliare.
+
+Nodul MASTER parseaza numele fisierelor de intrare si iesire si le seteaza in
+doua variabile statice astfel incat sa fie vizibile de toate celelalte procese.
+Acesta creaza 4 thread-uri si asteapta ca acestea sa se execute. Thread-urile
+executa functia master_thread_func.
+
+Functia master_thread_func realizeaza citirea paralelizata din fisiere si
+trimiterea paragrafelor la workeri. Se deschide fisierul de intrare, se aloca
+un buffer in care sunt retinute liniile paragrafului citit (paragraph). De
+asemenea, sunt utilizate variabilele par_type (care retine un numar de la 1 la
+4 care simbolizeaza tipul paragrafului citit) si paragraph_count care va numara
+paragrafele citite si care va fi intors de functie. Paragraful este citit linie
+cu linie. In momentul in care se citeste un tip de paragraf, se seteaza
+variabila par_type. Se adauga in buffer liniile citite pana cand se citeste
+caracterul newline. In acel moment se incrementeaza valoarea la care pointeaza
+paragraph_count si se trimit la workerul corespunzator tipului de paragraf
+citit numarul paragrafului, numarul de linii si paragraful linie cu linie.
+Numarul de linii si continutul buffer-ului se reseteaza pentru citirile
+urmatoare. Cand s-a citit ultima linie, se trimite ultimul paragraf citit, apoi
+se mai face un send cu sirul "done" care semnaleaza faptul ca thread-ul nu va
+mai realiza niciun send. Functia intoarce pointerul paragraph_count inapoi in
+thread-ul principal al nodului MASTER.
+
+In continuare in functia main, nodul MASTER retine din functia join numarul de
+paragrafe calculat anterior si aloca un buffer egal cu o matrice de string-uri
+de dimensiune total_par_count * MAX_LINE_COUNT (numarul maxim de linii pentru
+un paragraf). Se aloca, de asemenea un vector in care se retin tipurile
+paragrafelor primite si un vector in care se retin dimensiunile. Vectorul
+finished_workers este folosit pentru a marca workerii care si-au incheiat
+executia.
+
+Procesul MASTER realiezeaza apoi primirea paragrafelor prelucrate intr-un while
+ce are drept conditie de oprire incheierea executiei workerilor. Se face receive
+de la fiecare worker cu indicele paragrafului, numarul de linii si liniile unui
+paragraf. Se salveaza aceste date in buffere. Cand un worker si-a incheiat
+executia (a trimis "done"), se marcheaza in finished_workers acest lucru (se 
+pune valoarea 1). Nu se va mai face Recv de la acel worker. Cand toti workerii
+au trimis done, se face break din while si se incepe scrierea in fisier.
+Se parcurge bufferul de paragrafe si se afiseaza in fisierul de iesire tipul
+paragrafului, precum si fiecare linie din acesta, punandu-se la final un " "
+daca este necesar. Dupa scriere, se face free la bufferele si alte variabile
+folosite si se face MPI_Finalize.
+
+================================================================================
+
+Procesele 1-4 (workerii):
+
+Workerii aloca fiecare un buffer pentru un paragraf (un vector de string-uri).
+Executa o bucla din care conditia de iesire este primirea unui paragraf ce
+contine doar o linie cu textul "done". Acest lucru semnealeaza ca nu mai exista
+paragrafe de tipul workerului in fisierul de intrare. Se realizeaza MPI_Recv
+la numarul paragrafului, numarul de linii, apoi la fiecare linie in parte din
+paragraf. Se calculeaza apoi numarul necesare de thread-uri pentru prelucrare
+folosind functia getThreadCount. Se obtine astfel un numar de thread-uri cuprins
+intre 1 si numarul de core-uri de pe masina - 1 in functie de cate linii are
+paragraful ce trebuie prelucrat.  Prelucrarea are loc in cel mult 3 stagii.
+Primul stagiu se executa daca numarul de linii este prea mare si toate
+core-urile primesc cel putin odata 20 de linii. Fiecare thread va executa
+prelucrarea a cate 20 de linii pana cand numarul de linii ramase neprelucrate
+scade sub 20 * (numar core uri - 1). A doua parte se executa dupa prima. Se 
+calculeaza cate dintre core-uri sunt necesare pentru a prelua 20 de linii din
+cele ramase si realizeaza si ele prelucrarea. A treia parte se realizeaza daca
+au mai ramas intre 1 si 20 de linii neprelucrate in urma celor 2 parti
+anterioare. Un thread va prelucra liniile ramase. In toate din cele 3 cazuri,
+prelucrarea este realizata in felul urmator. Se construieste o structura
+(par_lines) ce contine liniile, indicele din paragraf al primei linii, numarul
+de linii si tipul paragarafului (se foloseste pentru asta functia 
+buildParagraphLines). Thread-urile (sau thread-ul) sunt pornite, ele ruleaza
+functia process_string_func ce primeste ca parametru structura mentionata
+anterior. 
+Functia process_string_func verifica tipul paragrafului si aplica unul din
+filtre pe toate liniile din structura.
+Dupa join, se extrage structura modificata din variabila status si se suprascriu
+in buffer vechile linii cu cele modificate. Dupa ce prelucrarea s-a incheiat,
+se trimit la nodul MASTER indicele paragrafului, numarul de linii si fiecare
+linie in parte. Workerul reseteaza apoi bufferul folosind memset pentru a fi
+folosit ulterior la urmatoarele paragrafe si se repeta procesul pana cand
+thread-ul din MASTER corespunzator Worker-ului a incheiat citirea si a trimis
+"done".
+
+
+

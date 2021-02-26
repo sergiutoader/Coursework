@@ -1,0 +1,59 @@
+Nume: Toader Sergiu-Cristian
+Grupa: 335CB
+
+				Tema 1 - Algoritmi Paraleli si Distribuiti
+
+
+Descrierea implementarii:
+
+Programul initial din schelet a fost modificat prin inlocuirea executiei
+secventiale a algoritmilor cu o executie paralelizata folosind pthread.
+Functia get_args a fost modificata pentru citirea unui parametru suplimentar din
+linia de comanda, P care reprezinta numarul de thread-uri pe care programul va
+fi rulat.
+
+Partea de citire a datelor de intrare pentru multimea Julia, calculul
+latimii si inaltimii si alocarea tabloului result au fost pastrate in firul
+principal.
+
+Se declara un vector de elemente de tip pthread_t, care vor fi rulate in metoda
+main. Se declara, de asemenea, global o barierea care va fi folosita pentru
+sincronizare. Variabilele care retin tabloul si parametrii necesari rularii 
+algoritmului sunt, de asemenea, declarati global pentru a fi vizibili in functia
+rulata de firele de executie lansate din main.
+
+Se initializeaza bariera, se creeaza thread-urile, cu functia thread_function si
+cu parametru un id unic pentru fiecare thread. In main se face mai departe join
+pe thread-urile create, pentru a bloca executia principala pana cand firele de
+executie isi incheie rularea. Se distruge bariera utilizata si se executa
+executa in main scrierea in fisier a rezultatului algoritmului pentru multimea
+Mandelbrot si eliberarea memoriei pentru tabloul result.
+
+
+Restul operatiilor pentru calculul multimilor Julia si Mandelbrot sunt executate
+paralelizat in functia thread_function.
+Se extrage id-ul din argument. Pe baza acestuia, se calculeaza indicii de start
+si end pentru calculul paralel al multimii Julia. Se imparte inaltimea interva-
+lului in parti egale, iar fiecare fir de executie va calcula rezultatul functiei
+pe subintervalul atribuit lui. La finalul iteratiei, se introduce o bariera
+pentru a garanta ca toate firele au incheiat calculul inainte de a trece mai
+departe la ajustarea tabloului result.
+Se trece apoi de la coordonate matematice la coordonatele ecran, realizata tot
+in paralel. Iteratia 0 -> height se modifica in start / 2 -> end / 2. Astfel,
+fiecarui thread i se atribuie o sectiune din prima jumatate a matricei result si
+realizeaza interschimbarea cu valorile "diametral opuse" din matrice. Se
+introduce o bariera pentru a asigura ca result are toate valorile asignate
+inainte de trecerea la construirea fisierului de iesire.
+
+Operatiile de scriere in fisier, eliberare memoriei matricei result, apoi de 
+citire a datelor pentru multimea Mandelbrot, recalcularea width si height pentru
+noul interval si realocarea tabloului result se realizeaza doar de thread-ul 0,
+intrucat nu pot fi paralelizate. Se verifica id-ul curent, daca acesta este 0,
+se executa operatiile mentionate anterior, altfel, se trece mai departe,
+executia celorlalte thread-uri fiind blocata de o bariera pana cand firul 0
+este gata.
+
+Calculul imaginii multimii Mandelbrot se realizeaza similar. Se paralelizeaza
+dupa inaltime, plasandu-se o bariera la finalul iteratiei prin multimea
+punctelor. Trecerea de la coordonate matematice la coordonate ale ecranului se
+realizeaza si ea identic ca la multimea Julia.

@@ -1,0 +1,248 @@
+Nume: Toader Sergiu-Cristian
+Grupa: 335CB
+
+
+APD - Tema 2
+
+Implementarea task-urilor este facuta in clasele din package-ul intersections.
+Crearea de instante pentru intersectii si apelarea metodelor pe masini sunt
+realizate in clasa IntersectionHandlerFactory, mai exact in metoda handle a
+fiecarei clase anonime create. Citirea datelor suplimentare si setarea
+variabilei Main.intersection egala cu o instanta de intersectie corespunzatoare
+in functie de task-ul testat se realizeaza in clasa ReaderHandlerFactory.
+Observatie: La rularea pe checkerul local, am obtinut 50 de puncte.
+
+
+Task 1 - simple_semaphore
+
+Implementare realizata in clasa SimpleSemaphore. In metoda handle se apeleaza
+pentru fiecare masina metodele reachSemaphore, waitAtSemaphore si drive.
+Metoda reachSemaphore afiseaza mesajul de sosire la semafor. Metoda
+waitAtSemaphore face sleep cu timpul de asteptare al masinii. Metoda drive
+afiseaza mesajul de plecare.
+
+
+Task 2 - simple_n_roundabout
+
+Implementare realizata in clasa SimpleIntersection. Se citesc din fisierul de
+intrare N (numarul de masini care pot intra simultan) si passingTime (timpul
+petrecut de o masina in intersectie). Se creaza in constructor un semafor cu
+N permits. In metoda handle se apeleaza pentru fiecare masina metodele reach,
+enter si exit.
+Metoda reach afiseaza mesajul de sosire la semafor, apeleaza metoda acquire pe
+semafor prin care masina incearca sa intre in intersectie. Daca semaforul nu va
+avea permits, threadul masinii se va opri pana cand un permit va fi disponibil.
+Metoda enter va afisa mesajul de intrare in intersectie si va executa un sleep
+cu passingTime. Metoda exit va afisa mesajul de iesire din intersectie si va
+face release pe semafor, eliberand astfel un loc in intersectie.
+
+
+Task 3 - simple_strict_1_car_roundabout
+
+Implementare realizata in clasa SimpleStrictCarIntersection. Se citesc din
+fisierul de input numarul de directii si timpul petrecut in intersectie. Se
+instantiaza un obiect SimpleStrictCarIntersection cu parametrii cititi si cu
+1 pentru numarul maxim de masini. In metoda handle, se apeleaza metodele de
+reach, enter si exit pentru fiecare masina, cu optiunea false pentru
+waitForAllCars.
+Deoarece clasa SimpleStrictCarIntersection implementeaza rezolvarea pentru task
+3, 4, 5, voi explica aici doar partea ce tine strict de task 3.
+In clasa intersectiei, se foloseste un vector de semafoare (pentru fiecare
+directie). Se instantiaza in constructor si o bariera de pentru a realiza
+sincronizarea intrarii masinilor in intersectie.
+Metoda reach afiseaza mesajul de sosire in intersectie. Masina va incerca sa
+intre in intersectie printr-un acquire pe semaforul asociat directiei de pe care
+a venit masina. Astfel, doar o masina va putea intra in intersectie. Este
+apelata mai departe metoda await pe bariera, pentru a sincroniza o intrare a
+masinilor de pe fiecare directie simultan.
+Metoda enter va afisa mesajul de intrare in intersectie si va executa un sleep
+cu timpul de traversare pentru intersectie.
+Metoda exit va afisa mesajul de iesire din intersectie si va face release pe
+semafor, pentru a debloca alt thread care asteapta sa intre in intersectie.
+
+
+Task 4 - simple_strict_x_car_roundabout
+
+Implementare realizata in clasa SimpleStrictCarIntersection. Se citeste din
+fisierul de input si maxCarsCount, pe langa datele de la task 3. Se instantiaza
+un obiect SimpleStrictCarIntersection cu parametrii cititi, inclusiv
+maxCarsCount. In metoda handle, se apeleaza metodele de reach, enter si exit
+ale intersectiei cu valoarea true pentru waitForAllCars. Pe langa elementele de
+sincronizare mentionate la task 3, aici se foloseste si o a doua bariera
+allCarsBarrier folosita pentru sincronizarea tuturor masinilor la sosirea in
+intersectie.
+Flow metode task 4:
+Metoda reach afiseaza mesajul de sosire in intersectie, apeleaza metoda await
+pe allCarsBarrier, sincronizand sosirea in interesctie a masinilor. Fiecare
+masina va incerca sa intre in intersectie si se va bloca daca semaforul asociat
+directiei sale de mers nu are permits. Atunci cand masina trece de semafor, se
+va afisa mesajul de selectie a masinii si se va apela metoda await pe bariera
+de sincronizare a intrarii in intersectie a masinilor selectate pentru intrare.
+Metoda enter afiseaza mesajul de intrare in intersectie si va executa un sleep
+cu timpul de traversare pentru intersectie.
+Metoda exit afiseaza mesajul de iesire, face din nou await pe bariera pentru
+sincronizarea iesirii din intersectie si face release pe semaforul de pe
+directia sa de mers.
+
+
+Task 5 - simple_max_x_car_roundabout
+
+Implementare realizata in clasa SimpleStrictCarIntersection. Citirea din
+fisierul de input si instantierea obiectului sunt identice cu cele de la task-ul
+anterior. In metoda handle, se apeleaza metodele reachMax, enterMax si exitMax
+ale clasei SimpleStrictCarIntersection. Se foloseste si in cadrul acestui task
+vectorul de semafoare utilizat la precedentele 2 taskuri.
+Metoda reachMax afiseaza mesajul de sosire in intersectie si face acquire pe
+semafor similar cu task 3 si 4.
+Metoda enterMax afiseaza mesajul de intrare in intersectie si executa un sleep
+cu timpul de traversare pentru intersectie.
+Metoda exitMax afiseaza mesajul de iesire si elibereaza un loc in intersectie
+prin apelul metodei release.
+Prin folosirea listei de semafoare, se asigura ca maxim N masini au aces la zona
+de cod in care se realizeaza traversarea intersectiei.
+
+
+Task 6 - priority_intersection
+
+Implementare realizata in clasa PriorityIntersection. La acest task nu se
+realizeaza citiri suplimentare. In metoda handle, in functie de prioritatea
+masinii, se apeleaza anumite metode astfel: Pentru prioritate 1, se apeleaza
+metoda lowPriorityEnterIntersection. Pentru prioritate mai mare, se realizeaza
+un apel al functiei highPriorityEnterIntersection, urmat de un sleep cu timpul
+de traversare, urmat de un apel al metodei highPriorityExitIntersection.
+Clasa contine un AtomicInteger pentru contorizarea numarului de masini cu
+prioritate din intersectie, un lock (string) pentru sincronizarea operatiilor de
+wait si notify, o coada (ArrayBlockingQueue) in care se introduc masinile de
+prioritate mica.
+Metoda de intrare (prioritate mica) - afiseaza ca masina curenta incearca sa
+intre in intersectie, apoi verifica daca exista masini cu prioritate in
+intersectie. Daca exista, se va adauga masina in coada, si thread-ul respectiv
+va face wait pana cand intersectia se elibereaza. Daca intersectia este libera,
+masina va afisa mesajul de iesire iar thread-ul isi incheie executa.
+Metoda de intrare (prioritate mare) - Incrementeaza variabila carsInIntersection
+si afiseaza mesajul de intrare
+Metoda de iesire (prioritate mare) - afiseaza mesajul de iesire din intersctie,
+decrementeaza carsInIntersection si verifica egalitatea acesteia cu 0. Daca este
+libera intersectia, coada se va goli, se vor afisa mesajele de iesire din
+intersectie ale masinilor fara prioritate si se va apela metoda notifyAll pe 
+thread-urile in asteptare.
+
+
+Task 7 - crosswalk
+
+Implementare realizata in clasa Crosswalk. Se citesc durata si numarul de 
+pietoni. Se creeaza instante pentru pietoni cu datele citite si o instanta
+a clasei Crosswalk. In handle se apeleaza metoda enter pentru fiecare masina.
+In clasa Crosswalk se foloseste o lista de Integer (lastState) in care se
+codifica pentru fiecare masina starea anterioara. (0 pentru cazul cand
+masina e proaspat intrata - nu are mesaj afisat anterior, 1 pentru cazul cand
+anterior a fost rosu pentru masina, 2 pentru cazul cand anterior a fost verde
+pentru masina). Clasa are o variabila si pentru instanta clasei Pedestrians.
+Metoda enter - contine care va repeta procesul de afisari pana cand masina 
+metoda isFinished a clasei Pedestrians va intoarce true. In interior se verifica
+daca starea pietonilor. Daca acestia trec, iar anterior masinile au culoarea
+verde, se va seta culoarea pe rosu si se va afisa mesajul corespunzator.
+Similar, daca pietonii nu trec iar anterior culoarea pentru masini nu era setata
+pe verde, se va seta pe verde si se va afisa un mesaj corespunzator. Pentru 
+cazul in care isFinished se seteaza pe true simultan cu setarea isPass pe false,
+se mai face o verificare pentru afisazea mesajului trecerii pe verde.
+
+
+Task 8 - simple_maintenance
+
+Implementare realizata in clasa SimpleMaintenance. Se citeste numarul maxim de
+masini necesare pentru a debloca intersectia. In handle, se apeleaza metoda
+enter pentru masina curenta. 
+Clasa contine campul carsNo, citit anterior din fisierul de input, totalCars
+care retine numarul de masini ramase in intersectie, un obiect lock pentru
+sincronizare si doua cozi (ArrayBlockingQueue) de asteptare pentru masinile care
+circula pe sensul 0, respectiv 1.
+Metoda enter - afiseaza mesajul de intrare in intersectie, si adauga masina 
+curenta in coada de asteptare corespunzatoare, dupa care verifica daca adaugarea
+in coada permite deblocarea intersectiei prin apelul metodei
+checkPassingPossible. Verificarea se face sincronizat, pentru ca iesirea din
+intersectie a masinilor sa se produca imediat ce este posibil. Se verifica daca
+ambele cozi contin numarul minim de masini necesar. Daca da, se scot masinile
+si se scade numarul de masini scoase din numarul total de masini. Deoarece se
+scot alternativ masini in ordinea lane0, lane1, lane0, ..., la final se verifica
+daca au mai ramas in queue0 masini si se vor scoate si ele in acest caz.
+
+
+Task 9 - complex_maintenance
+
+Implementare realizata in clasa ComplexMaintenance. Se citesc din fisierul de
+intrare numarul nou de benzi, numarul vechi de benzi si numarul de masini care
+pot trece simultan de pe aceeasi banda pe o banda noua. Se creeaza o instanta
+a clasei cu aceste valori citite. In handle se apeleaza metoda enter pentru
+masina curenta.
+Clasa contine o bariera pentru ca toate masinile sa fi ajuns la intersectie
+inainte ca noile thread-uri sa inceapa. Clasa contine de asemnea campul
+laneCoupling - structura de date in care vor fi retinute masinile. Este o
+lista de liste de elemente de tip OldLane. Clasa OldLane contine indicele benzii
+si o coada de masini venite de pe banda respectiva. laneCoupling este
+initializat in constructor - este de dimensiune newLanesCount, contine elemente
+ale caror dimensiune este egala cu subArraySize. Aceasta dimensiune este
+determinata astfel incat fiecare linie noua sa aiba un numar egal de linii vechi
+repartizate ei. Exceptie face aici ultima banda noua care poate avea mai multe,
+in situatia in care repartitia nu se poate face in mod egal. Fiecare linie noua
+va avea astfel o lista de elemente de tip OldLane - pentru fiecare linie veche.
+Metoda enter - calculeaza linia noua pe care va fi repartizata masina, apoi
+identifica coada de asteptare de pe linia noua in care masina trebuie sa intre
+si adauga masina in coada respectiva. Se asteapta apoi la bariera pana cand
+toate masinile au fost repartizate unei benzi noi si unei cozi de asteptare.
+Masina cu indicele 0 va porni apoi thread-urile care realizeaza trecerea pe
+benzile vechi. Thread-urile sunt implementate in clasa NewLane care contine un
+camp cu ID-ul benzii, lista de cozi cu masinile care vor intra pe acea banda si
+cu numarul de masini care pot trece simultan. Se vor crea atatea thread-uri cate
+benzi noi sunt.
+Metoda run va realiza urmatoarele operatii: Va extrage prima banda veche din 
+lista de benzi vechi, apoi va extrage un numar de masini de pe acea banda si
+le va muta pe banda noua, afisand un mesaj corespunzator. Daca banda veche
+continea un numar de masini mai mic sau egal cu numarul de masini care pot
+trece, coada va fi eliminata din array si se va afisa un mesaj corespunzator.
+Daca banda veche va mai contine masini dupa extragere, se afiseaza mesajul
+corespunzator acestei situatii si se muta coada cu elementele ramasa la 
+finalul array-ului, urmand sa mai fie prelucrata cand ajunge iar sa fie prima
+din lista. Procesul se repeta pana cand toate cozile au fost complet prelucrate.
+
+
+Task 10 - railroad
+
+Implementare realizata in clasa Railroad. Pentru acest task nu se citesc date
+suplimentare. In handle, se apeleaza metoda enter pentru masina curenta.
+Clasa contine un obiect lock pentru sincronizarea operatiilor de wait si notify.
+Contine de asemenea un AtomicInteger carsWaiting care contorizeaza numarul de
+masini in asteptare la calea ferata, numarul total de masini si 2 cozi de
+asteptare pentru fiecare sens de mers.
+Metoda enter - se afiseaza mesajul de oprire la calea ferata, creste numarul de
+masini in asteptare cu 1, se adauga masina in coada de asteptare corespunzatoare
+sensului sau de mers si se verifica daca masinile pot trece. Daca numarul de
+masini a ajuns la limita de deblocare, ultima masina care a trecut va afisa
+mesajul ca se poate trece, va notifica celelalte thread-uri pentru deblocare si
+va crea 2 thread-uri (unul pentru fiecare sens de mers) care se vor ocupa de
+restul afisarilor. Daca numarul de masini nu a ajuns la limita de deblocare, 
+thread-ul curent va face wait.
+Thread-urile de pornire a masinilor sunt implementate in clasa ResumeDriving.
+Clasa primeste ca argument coada de asteptare a masinilor. In metoda run, se va
+parcurge coada de asteptare si se vor afisa mesajele de iesire. Thread-urile se
+executa in paralel.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

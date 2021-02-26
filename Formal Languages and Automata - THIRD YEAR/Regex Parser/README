@@ -1,0 +1,208 @@
+Nume: Toader Sergiu-Cristian
+Grupa: 335CB
+
+
+						Tema 3 - Limbaje Formale si Automate
+
+
+Observatie: Implementarea partii 2 a temei a fost preluata de la tema 2.
+
+
+Partea 1 (Conversie Expresie Regulata -> Automat Finit Nedeterminist)
+
+Am definit clase pentru Expresii Regulate:
+Expr 	- interfata
+Concat	- care retine 2 subexpresii concatenate
+Reunion - care retine 2 subexpresii alfate in reuniune
+Star 	- care retine subexpresia la care se aplica Kleene Star
+Par 	- care retine subexpresia din interiorul unei paranteze
+Symbol 	- care retine un caracter din alfabet
+
+Am definit clasa PDA - un Automat push down care contine o stiva,
+implementeaza oparatii de push pe stiva, pop, operatiile de reducere a stivei
+si de preprocesare a cuvantului si metoda parse care realizeaza parcurgerea
+cuvantului si parsarea lui intr-un obiect de tip Expr
+
+Metode ale clasei PDA:
+- preprocess - se apeleaza inainte de parsarea cuvantului - eliminina toate
+caracterele "*" consecutive din cuvant
+- push si pop - realizeaza adaugarea, respectiv eliminearea unui element de pe
+stiva
+
+Metodele de reducere - reducerea se realizeaza prin scoaterea de pe stiva a
+elementelor de tip Expr si (eventual) a simbolurilor "(", "|" necesare identi-
+ficarii tipului de operatie ce trebuie realizata, si inlocuirea acestora cu
+un obiect de tip Expr rezultat in urma aplicarii operatiei.
+
+reduceConcat - realizeaza reducerea unei expresii de tip Concat de pe stiva.
+Extrage ultimele 2 expresii de pe stiva (e1, e2) si adauga pe stiva
+Concat(e1, e2).
+
+reduceReunion - realizeaza reducerea unei expresii de tip Reunion de pe stiva.
+Extrage ultimele 2 expresii de pe stiva (e1, e2), si simbolul "|" si adauga pe
+stiva Reunion(e1, e2).
+
+reduceStar - realizeaza reducerea unei expresii de tip Star de pe stiva.
+Extrage expresia de pe stiva (e), extrage paranteza deschisa si adauga pe stiva
+un obiect Par(e).
+
+
+Functia parse - transforma cuvantul intr-o expresie regulata (un obiect de tip
+Expr). Functia parcurge caracterele din cuvant si realizeaza urmatoarele actiuni
+in functie de caracterul citit:
+	- daca a citit "(" - doar se adauga caracterul pe stiva
+	- daca a citit ")" - realizeaza reducerea parantezei, construind un obiect
+	Par cu continutul parantezei. Dupa aceea, se verifica daca se poate realiza
+	reducere de tip concatenare sau reuniune. Pentru asta trebuie ca elementul
+	urmator din cuvant sa nu fie "*". In plus, pentru realizarea concatenarii,
+	se extrage penultimul element de pe stiva (daca acesta exista). Daca acesta
+	este o expresie, se aplica metoda reduceConcat. Pentru operatia de reuniune,
+	se verifica daca am ajuns la finalul cuvantului sau daca elementul urmator
+	este paranteza inchisa. Se realizeaza reuninui repetate inlocuindu-se
+	ultimele 2 expresii de pe stiva si caracterul "|" cu o expresie de tip
+	Reunion. Daca au fost reuniuni succesive, se repeta procesul pana cand
+	conditiile mentionate anterior nu se mai respecta.
+	- daca a citit "*" -  se realizeaza reducerea star, inlocuind expresia din
+	varful stivei cu Star(expresie). Se verifica daca se pot realiza reduceri
+de tip concat si reunion, verificand aceleasi conditii ca cele mentionate in 
+cazul in care s-a citit ")", aplicandu-se aceste reduceri in caz favorabil.
+	- daca a citit "|" - doar se adauga caracterul pe stiva
+	- daca a citit un caracter din alfabet - se adauga Symbol(caracter) pe
+	stiva. Se verifica daca se pot realiza reduceri de tip concat si reunion,
+	verificand aceleasi conditii ca cele mentionate in cazul in care s-a citit
+	")", aplicandu-se aceste reduceri in caz favorabil.
+
+
+Am definit clasele NFA_Transition si NFA - cu ajutorul carora pot fi retinute
+date despre un NFA (numarul de stari, starea initiala, starea finala si tranzi-
+tiile).
+
+Am definit clasa RegexNFAConverter - care realizeaza conversia intre un obiect
+expresie regulata si un automat finit nedeterminist
+
+
+Functii RegexNFAConverter:
+
+- convertExpr - realizeaza conversia expresiei intr-un NFA, apeland in functie
+de tipul expresiei metoda de conversie corespunzatoare. Conversia se va realiza
+recursiv, pe fiecare subexpresie din interiorul expresiei principale din care
+vor rezulta NFA-uri mai mici, care vor fi combinate conform regulilor de baza
+pentru concatenare, reuniune si Kleene Star. Verificarea tipului de instructiune
+se realizeaza folosind metoda isinstance.
+
+- convertSymbol - conversie de la o expresie regulata ce consta in doar un
+simbol, construieste un nfa simplu, cu 2 stari si o tranzitie de la starea
+initiala la cea finala pe simbolul corespunzator.
+
+- convertConcat - de la o expresie de tip concatenare, construieste un NFA ce
+leaga cele doua NFA-uri mai mici ale subexpresiilor printr-o tranzitie. Se
+extrag cele doua nfa-uri din subexpresiile continute de expresia mare in mod
+recursiv. Pentru constructia noului nfa, numarul nou de stari va fi suma
+starilor nfa-urilor mici - 1 (deoarece una din stari va fi comuna celor doua).
+Tranzitiile vor fi tranzitiile primului nfa, la care se adauga tranzitiile
+celui de-al doilea nfa la care s-a modificat numerotarea starilor, adunandu-se
+la numarul fiecarei stari nfa1.state_count - 1.
+
+- convertReunion - realizeaza conversia de la o expresie de tip reuniune la un
+NFA. Construieste un NFA ce leaga cele doua NFA-uri mai mici ale subexpresiilor
+prin doua stari suplimentare si 4 tranzitii - epsilon. Se calculeaza cele 2
+nfa-uri ale subexpresiilor in mod recursiv, dupa care incepe constructia noului
+NFA. Numarul de stari va fi suma starilor subexpresiilor + 2 (s-a adaugat o
+stare noua initiala si o stare noua finala). Se adauga 2 epsilon-tranzitii de la
+starea initiala la vechile stari finale ale celor doua automate mici. Se adauga
+tranzitiile primului automat mic cu numerotarea starilor incrementata cu 1
+datorita adaugarii starii initiale. Se adauga similar tranzitiile din automatul
+2, cu numerotarea starilor decalata cu 1 + numarul de stari din primul automat.
+Se adauga epsilon-tranzitii de la starile finale ale vechilor automate la
+starea finala a noului automat.
+
+- convertStar - realizeaza conversia de la o expresie de tip Star la un NFA ce
+repeta de 0 sau mai multe ori cuvantul generat de subexpresie. Se verifica
+tipul subexpresiei continute in star si se calculeaza recursiv nfa-ul. Noul nfa
+va avea cu 2 stari mai mult decat cel vechi. Tranzitiile sale vor fi: doua
+tranzitii-epsilon de la starea initiala la vechea stare initiala si de la starea
+initiala la starea finala, tranzitiile vechiului nfa a caror stari au fost
+modificate - s-a incrementat cu 1 numarul fiecarei stari deoarece am adaugat o
+stare initiala. Ultimele doua tranzitii adaugate sunt de la vechea stare finala
+la vechea stare initiala (pentru repetare) si de la vechea stare finala la noua
+stare finala (pentru incheierea repetarii). Ambele sunt epsilon-tranzitii.
+
+- convertPar - verifica tipul de expresie continuta in paranteza si converteste
+recursiv
+
+In main - se creeaza o instanta pentru PDA, se deschide fisierul de input si se
+realizeaza citirea cuvantului. Cuvantul este mai intai preprocesat, apoi parsat,
+rezultand astfel variabila regex_tree care retine expresia parsata de pda. Dupa
+aceea, se creeaza o instanta a converterului si se apeleaza metoda convertExpr,
+generandu-se astfel nfa-ul prin conversia de la expresia regulata.
+Se realizeaza scrierea proprietatilor nfa-ului in primul fisier de iesire (
+numarul de stari, starea finala, tranzitiile).
+
+
+
+Partea 2 (Conversie Automat Finit Nedeterminist -> Automat Finit Determinist)
+
+Clase utilizate:
+
+NFA_Transition - retine starea initiala, simbolul si starile finale dintr-un
+automat nedeterminist
+
+DFA_Transition - retine starea initiala, simbolul si starea finala a unei
+tranzitii din automatul determinist creat
+
+DFA - clasa care retine informatii despre DFA-ul creat
+	- constructorul initializeza setul de stari, cel de tranzitii, numarul de
+	stari cu 0 si stateMap cu un dictionar vid.
+	- stateMap este folosit pentru maparea grupurilor de stari din NFA cu in
+	stari singulare ce apartin DFA-ului. Foloseste frozenSet(stare) ca si cheie
+	(deoarece set-ul normal nu este hashable)
+	- metoda addTransition adauga o tranzitie noua in DFA
+	- metoda addState adauga o stare noua in DFA, actualizand de asemenea
+	stateMap cu starea nou adaugata
+	- getFinalStates este o metoda care calculeaza o lista cu starile finale
+	ale DFA-ului. Identifica starile din DFA care au fost alcatuite din stari
+	finale in automatul nedeterminist
+
+Functie utilizata:
+
+epsilon - intoarce epsilon-closure pentru o stare din NFA
+		- realizeaza intersectia intre inchiderea starii, inchiderile celorlalte
+		stari din inchiderea starii, si asa mai departe
+
+
+Programul principal:
+
+Se realizeza citirea parametrilor din linia de comanda (numele fisierelor de
+input si output). Se deschide fisierul de input si se realizeaza citirea si
+parsarea datelor de intrare. Astfel, se obtin alfabetul, numarul de stari,
+starile finale si tranzitiile automatului nedeterminist.
+Se construieste obiectul dfa ce va retine starile si tranzitiile DFA-ului
+echivalent. Pentru asta se foloseste o coada in care vor fi introduse toate
+starile DFA-ului obtinute prin "combinarea" starilor automatului nedeterminist.
+Variabila hasSinkstate va fi folosita pentru a retine daca exista stari care nu
+au tranzitii pe anumite simboluri, pentru a introduce un sinkstate si a completa
+astfel automatul determinist.
+Coada este initializata cu inchiderea lui 0 (starea initiala). Se extrag
+elemente din coada pana cand aceasta este vida. Elementul extras va reprezenta
+starea / inchiderea de stari curenta. Starea se adauga in DFA. Apoi se determina
+pentru fiecare simbol din alfabet tranzitiile pe starea respectiva. 
+Astfel, pentru fiecare stare din inchiderea de stari sursa se identifica
+tranzitiile pe simbolul curent din NFA. Se realizeaza intersectia tuturor
+starilor in care se ajunge prin acele tranzitii. Acela intersectie va semnifica
+o stare noua in automatul determinist.
+Daca nu au existat tranzitii pe simbolul respectiv, variabila destination_state
+va ramane un set vid. Astfel, se identifica necesitatea introducerii unui
+sinkstate in DFA.
+Adaugam in coada grupul de stari gasite daca destinatia nu se gaseste deja acolo
+sau daca nu a fost deja adaugata in dfa. Se adauga tranzitiile daca starea
+initiala nu este sinkstate. Se repeta tot procesul pentru toate starile ramase.
+La final, se seteaza tranzitii din sinkstate in sinkstate pe toate simbolurile
+alfabetului.
+Pentru afisarea rezultatului, se calculeaza inainte starile finale si numarul
+total de stari din automatul determinist. Pentru asta, se folosete metoda
+getFinalStates din clasa DFA, respectiv functia len pe set-ul dfa.states.
+Se deschide fisierul de output, se scriu, pe rand, numarul de stari pe prima
+linie, starile finale pe a doua linie, iar pe urmatoarele linii tranzitiile
+automatului determinist. Pentru tranzitii, se extrag starile sursa si destinatie
+din dictionarul stateMap. Dupa ce totul a fost scris, se inchide fisierul
+de output.

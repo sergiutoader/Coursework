@@ -1,0 +1,69 @@
+Toader Sergiu-Cristian, 335CB
+
+                                Tema 2 - LFA
+
+
+Clase utilizate:
+
+NFA_Transition - retine starea initiala, simbolul si starile finale dintr-un
+automat nedeterminist
+
+DFA_Transition - retine starea initiala, simbolul si starea finala a unei
+tranzitii din automatul determinist creat
+
+DFA - clasa care retine informatii despre DFA-ul creat
+	- constructorul initializeza setul de stari, cel de tranzitii, numarul de
+	stari cu 0 si stateMap cu un dictionar vid.
+	- stateMap este folosit pentru maparea grupurilor de stari din NFA cu in
+	stari singulare ce apartin DFA-ului. Foloseste frozenSet(stare) ca si cheie
+	(deoarece set-ul normal nu este hashable)
+	- metoda addTransition adauga o tranzitie noua in DFA
+	- metoda addState adauga o stare noua in DFA, actualizand de asemenea
+	stateMap cu starea nou adaugata
+	- getFinalStates este o metoda care calculeaza o lista cu starile finale
+	ale DFA-ului. Identifica starile din DFA care au fost alcatuite din stari
+	finale in automatul nedeterminist
+
+Functie utilizata:
+
+epsilon - intoarce epsilon-closure pentru o stare din NFA
+		- realizeaza intersectia intre inchiderea starii, inchiderile celorlalte
+		stari din inchiderea starii, si asa mai departe
+
+
+Programul principal:
+
+Se realizeza citirea parametrilor din linia de comanda (numele fisierelor de
+input si output). Se deschide fisierul de input si se realizeaza citirea si
+parsarea datelor de intrare. Astfel, se obtin alfabetul, numarul de stari,
+starile finale si tranzitiile automatului nedeterminist.
+Se construieste obiectul dfa ce va retine starile si tranitiile DFA-ului
+echivalent. Pentru asta se foloseste o coada in care vor fi introduse toate
+starile DFA-ului obtinute prin "combinarea" starilor automatului nedeterminist.
+Variabila hasSinkstate va fi folosita pentru a retine daca exista exista
+stari care nu au tranzitii pe anumite simboluri, pentru a introduce un sinkstate
+si a completa astfel automatul determinist.
+Coada este initializata cu inchiderea lui 0 (starea initiala). Se extrag
+elemente din coada pana cand aceasta este vida. Elementul extras va reprezenta
+starea / inchiderea de stari curenta. Starea se adauga in DFA. Apoi se determina
+pentru fiecare simbol din alfabet tranzitiile pe starea respectiva. 
+Astfel, pentru fiecare stare din inchiderea de stari sursa se identifica
+tranzitiile pe simbolul curent din NFA. Se realizeaza intersectia tuturor
+starilor in care se ajunge prin acele tranzitii. Acela intersectie va semnifica
+o stare noua in automatul determinist.
+Daca nu au existat tranzitii pe simbolul respectiv, variabila destination_state
+va ramane un set vid. Astfel, se identifica necesitatea introducerii unui
+sinkstate in DFA.
+Adaugam in coada grupul de stari gasite daca destinatia nu se gaseste deja acolo
+sau daca nu a fost deja adaugata in dfa. Se adauga tranzitiile daca starea
+initiala nu este sinkstate. Se repeta tot procesul pentru toate starile ramase.
+La final, se seteaza tranzitii din sinkstate in sinkstate pe toate simbolurile
+alfabetului.
+Pentru afisarea rezultatului, se calculeaza inainte starile finale si numarul
+total de stari din automatul determinist. Pentru asta, se folosete metoda
+getFinalStates din clasa DFA, respectiv functia len pe set-ul dfa.states.
+Se deschide fisierul de output, se scriu, pe rand, numarul de stari pe prima
+linie, starile finale pe a doua linie, iar pe urmatoarele linii tranzitiile
+automatului determinist. Pentru tranzitii, se extrag starile sursa si destinatie
+din dictionarul stateMap. Dupa ce totul a fost scris, se inchide fisierul
+de output.
